@@ -14,6 +14,15 @@ Normal mode is accessed by pressing the RST button.
 DFU mode is accessed by (1) holding BOOT, (2) press and release RST, 
 (3) release BOOT.
 
+# Using the serial port
+
+If you are using something like the Arduino IDE to program the board. It is 
+best to use another program to view the serial port of the WioLTE. If you
+use the IDE to view the serial port, it interferes with the programming
+interface.
+
+Picocom is a small, simple program that will do the job.
+
 # License
 
 This project is licensed under 0BSD. See the accompying LICENSE for the exact
