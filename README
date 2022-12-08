@@ -1,0 +1,20 @@
+# Purpose
+
+This software is for the WioLTE board from Seeed Studio. The purpose of this
+project is to create a GPS tracker that produces a data stream to be consumed
+by another piece of software to visual the path.
+
+# Uploading to WioLTE Board
+
+The WioLTE use DFU to put code onto the board. Here is a reminder to access the
+modes.
+
+Normal mode is accessed by pressing the RST button.
+
+DFU mode is accessed by (1) holding BOOT, (2) press and release RST, 
+(3) release BOOT.
+
+# License
+
+This project is licensed under 0BSD. See the accompying LICENSE for the exact
+copy.
