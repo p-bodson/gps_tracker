@@ -26,4 +26,5 @@ Picocom is a small, simple program that will do the job.
 # License
 
 This project is licensed under 0BSD. See the accompying LICENSE for the exact
-copy.
+copy. This license only applies to the code written for this project.
+The license of any libraries used might be different.

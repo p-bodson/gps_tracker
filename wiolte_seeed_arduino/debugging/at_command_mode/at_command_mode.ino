@@ -2,6 +2,7 @@
 // Preamble
 //////////////////////////////////////////
 #include "wio_tracker.h"
+#include <stdio.h>
 
 ///////////
 // Globals
@@ -21,22 +22,27 @@ void setup() {
 //////////////////////////////////////////
 
 void loop() {
-  listen_for_at_commands(); }
+  listen_for_at_commands(); 
+}
 
 //////////////////////////////////////////
 // Everything Else
 //////////////////////////////////////////
 void listen_for_at_commands() {
-  capture_command(); }
+  capture_command(); 
+}
 
 void capture_command() {
-    check_module_messages();
-    check_debug_messages(); }
+  check_module_messages();
+  check_debug_messages(); 
+}
 
 void check_module_messages() {
     // Check any messages from the module serial line
     while (MODULE_PORT.available() > 0) {
-        serialDebug.write(MODULE_PORT.read()); }}
+        serialDebug.write(MODULE_PORT.read()); 
+    }
+}
 
 void check_debug_messages() { 
     String static from_usb = "";
@@ -45,19 +51,23 @@ void check_debug_messages() {
     // Transimssion ends with newline
     while (serialDebug.available() > 0) {   
         int c = -1;
-        c = serialDebug.read();
+        c = serialDebug.read();      
         if (!is_newline(c)) {
             // grab usb char and show to user
             from_usb += (char)c; 
             serialDebug.write('\r');
             serialDebug.write("[at-cmd]$ ");
-            serialDebug.write(from_usb.c_str()); }
+            serialDebug.write(from_usb.c_str()); 
+        }        
         else {
             if (!from_usb.equals("")) {
-                serialDebug.println("\r\nResponse\r\n----------");
+                serialDebug.println("\r\nResponse ----------");
                 sendData(from_usb, 0);
-                from_usb = ""; }}}}
-
+                from_usb = ""; 
+            }
+        }
+    }
+}
 
 
 String sendData(String command, const int timeout) {
@@ -68,11 +78,36 @@ String sendData(String command, const int timeout) {
     while ((time + timeout) > millis()) {
         while (MODULE_PORT.available()) {
             char c = MODULE_PORT.read();
-            response += c; }}
-    return response; }
+            response += c; 
+        }
+    }
+    return response; 
+}
 
 bool is_newline(char c) {
   if (c == '\n' || c == '\r') {
-    return true; }
+    return true; 
+  }
   else {
-    return false; }}
+    return false; 
+  }
+}
+
+bool is_delete(char c) {
+  if (c == 0x7f) {
+    return true; 
+  }
+  else {
+    return false; 
+  }
+}
+
+void print_key_to_hex(char c) {
+  int len = 10;
+  char hex[len];
+  for (int i=0; i < len; i++) {
+    hex[i] = 0;
+  }
+  snprintf(hex, len, "%X", c);
+  serialDebug.write(hex);
+}
