@@ -1,42 +1,48 @@
-#include "wio_tracker.h"
-
-uint16_t newSMSNumber = -1;
-char message[128];
-char phone[32];
-char dateTime[32];
+#include "gnss.h"
+#include "timed_command.h"
 
 
-WioTracker wio = WioTracker();
+typedef struct Poll {
+  volatile uint32_t delay ;
+  volatile uint32_t counter;
+} Poll;
 
+static Poll gps_poll = {2000, 0};
+void pollAction (void (*polled_action) (), Poll * poll) {
+  if ( millis() - poll->counter < poll->delay) {
+   return;
+  }
+  else {
+
+    polled_action();
+
+    poll->counter = millis();
+  }
+}
+
+
+// Instance of GNSS class
+GNSS gnss = GNSS();
+Timer timer = TimedCommand();
+  
 void setup() {
-    wio.Power_On();
-    SerialUSB.println("Power On!");
-    SerialUSB.println("Wait for network registered...");
-
-    if (!wio.waitForNetworkRegister()) {
-        SerialUSB.println("Network error!");
-        return;
-    } else {
-        SerialUSB.println("Network ready!");
+    // Module power on 
+    gnss.Power_On();
+    while (!gnss.Check_If_Power_On()) {
+        SerialUSB.println("Waitting for module to power on...");
+        delay(1000);
     }
-    wio.readAllRecUnreadSMS();  // Set all "REC UNREAD SMS" to "REC READ SMS"
+    SerialUSB.println("\n\rPower On!");
+
+    if (!(gnss.open_GNSS())) {
+        SerialUSB.println("\n\rGNSS init failed!");
+        return;
+    }
+    SerialUSB.println("Open GNSS OK.");
+    delay(2000);
+    SerialUSB.println(timer.test());
 }
 
 void loop() {
-    int id = wio.detectRecUnreadSMS();
-    if (-1 != id) {
-        newSMSNumber = id;
-        wio.readSMS(newSMSNumber, message, 128, phone, dateTime);
-        SerialUSB.println("++++++++++++++ Start +++++++++++++++++");
-        SerialUSB.print("From: ");
-        SerialUSB.println(phone);
-        SerialUSB.print("Date: ");
-        SerialUSB.println(dateTime);
-        SerialUSB.println(message);
-        SerialUSB.println("++++++++++++++++ End +++++++++++++++");
-    } else {
-        SerialUSB.println("Waiting for new SMS!");
-    }
-
-    delay(1000);
+    pollAction(&gnss.dataFlowMode, &gps_poll;
 }
