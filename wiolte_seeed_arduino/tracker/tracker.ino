@@ -1,48 +1,77 @@
 #include "gnss.h"
-#include "timed_command.h"
+#include "poll.h"
+#include <string.h>
+
+struct GnssData {  
+  char utc_time[11];         // hhmmss.sss
+  char status_1;             // A = active, V = void
+  char latitude[10];         // ddmm.mmmm
+  char ns_indicator;         // north or south
+  char longitude[11];        // dddmm.mmmm
+  char ew_indicator;         // east or west
+  float speed_over_ground;   // knots
+  float course_over_ground;  // degrees
+  char utc_date[7];          // DDMMYY
+  float magnetic_variation;  // degrees
+  char mv_indicator;         // magnetic variation indicator; east or west
+  char status_2;             // A = alright, N = no good
+  char checksum[4];          // *25
+};
+
+// TODO move sentence into class
+// TODO move gnss data into class
 
 
-typedef struct Poll {
-  volatile uint32_t delay ;
-  volatile uint32_t counter;
-} Poll;
+const int nmea_sentence_length = 512;     // make it long enough to store response
+char nmea_sentence[nmea_sentence_length]; // stores the nmea response from the module
+Poll gnss_poll(2000); // used for non blocking action timing
 
-static Poll gps_poll = {2000, 0};
-void pollAction (void (*polled_action) (), Poll * poll) {
-  if ( millis() - poll->counter < poll->delay) {
-   return;
-  }
-  else {
-
-    polled_action();
-
-    poll->counter = millis();
-  }
-}
-
-
-// Instance of GNSS class
+// the interface with the Wio GNSS module
 GNSS gnss = GNSS();
-Timer timer = TimedCommand();
   
 void setup() {
-    // Module power on 
-    gnss.Power_On();
+    start_gnss(&gnss);
+    delay(2000);
+}
+
+void start_gnss(GNSS * module) {
+    module->Power_On();
     while (!gnss.Check_If_Power_On()) {
-        SerialUSB.println("Waitting for module to power on...");
+        SerialUSB.println("Waiting for module to power on...");
         delay(1000);
     }
     SerialUSB.println("\n\rPower On!");
 
-    if (!(gnss.open_GNSS())) {
-        SerialUSB.println("\n\rGNSS init failed!");
+    if (!(module->open_GNSS())) {
+        SerialUSB.println("\n\rGNSS init failed");
         return;
     }
     SerialUSB.println("Open GNSS OK.");
-    delay(2000);
-    SerialUSB.println(timer.test());
+    
+    if (!(module->enable_NMEA_mode())) {
+        SerialUSB.println("\n\rFailed to enable NMEA");
+        return;
+    }
+    SerialUSB.println("Using NMEA");
 }
 
 void loop() {
-    pollAction(&gnss.dataFlowMode, &gps_poll;
+    gnss_poll.poll(&get_gnss_data);
+}
+
+void get_gnss_data() {
+    clear_buffer(nmea_sentence, nmea_sentence_length);
+    if (gnss.NMEA_read_and_save("RMC", nmea_sentence)) {
+      parse_nmea_sentence(nmea_sentence, nmea_sentence_length);
+    }
+}
+
+void parse_nmea_sentence(char *sentence, int s_length) {
+      SerialUSB.println(sentence);
+}
+
+void clear_buffer(char * a_buffer, int a_length){
+  for (int i = 0; i < a_length; i++) {
+    a_buffer[i] = 0;
+  }
 }
