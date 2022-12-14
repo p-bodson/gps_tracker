@@ -1,37 +1,19 @@
-#include "gnss.h"
-#include "poll.h"
-#include <string.h>
+#include "tracker.h"
 
-struct GnssData {  
-  char utc_time[11];         // hhmmss.sss
-  char status_1;             // A = active, V = void
-  char latitude[10];         // ddmm.mmmm
-  char ns_indicator;         // north or south
-  char longitude[11];        // dddmm.mmmm
-  char ew_indicator;         // east or west
-  float speed_over_ground;   // knots
-  float course_over_ground;  // degrees
-  char utc_date[7];          // DDMMYY
-  float magnetic_variation;  // degrees
-  char mv_indicator;         // magnetic variation indicator; east or west
-  char status_2;             // A = alright, N = no good
-  char checksum[4];          // *25
-};
+const int NMEA_SENTENCE_LENGTH = 512;       // make it long enough to store response
+char nmea_sentence[NMEA_SENTENCE_LENGTH];   // stores the nmea response from the module
 
-// TODO move sentence into class
-// TODO move gnss data into class
-
-
-const int nmea_sentence_length = 512;     // make it long enough to store response
-char nmea_sentence[nmea_sentence_length]; // stores the nmea response from the module
-Poll gnss_poll(2000); // used for non blocking action timing
-
-// the interface with the Wio GNSS module
-GNSS gnss = GNSS();
+Poll gnss_poll = Poll(2000);                // used for non blocking action timing
+GnssData gnss_data = GnssData();
+GNSS gnss = GNSS();                         // the interface with the Wio GNSS module
   
 void setup() {
     start_gnss(&gnss);
     delay(2000);
+}
+
+void loop() {
+    gnss_poll.poll(&get_gnss_data);
 }
 
 void start_gnss(GNSS * module) {
@@ -55,23 +37,12 @@ void start_gnss(GNSS * module) {
     SerialUSB.println("Using NMEA");
 }
 
-void loop() {
-    gnss_poll.poll(&get_gnss_data);
-}
-
 void get_gnss_data() {
-    clear_buffer(nmea_sentence, nmea_sentence_length);
+    clear_buffer(nmea_sentence, NMEA_SENTENCE_LENGTH);
     if (gnss.NMEA_read_and_save("RMC", nmea_sentence)) {
-      parse_nmea_sentence(nmea_sentence, nmea_sentence_length);
+        if(gnss_data.parse_nmea(nmea_sentence)) {
+            // send data over network        
+        }
     }
 }
 
-void parse_nmea_sentence(char *sentence, int s_length) {
-      SerialUSB.println(sentence);
-}
-
-void clear_buffer(char * a_buffer, int a_length){
-  for (int i = 0; i < a_length; i++) {
-    a_buffer[i] = 0;
-  }
-}
