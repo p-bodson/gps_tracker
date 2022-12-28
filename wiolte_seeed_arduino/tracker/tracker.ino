@@ -3,10 +3,13 @@
 const int NMEA_SENTENCE_LENGTH = 512;       // make it long enough to store response
 char nmea_sentence[NMEA_SENTENCE_LENGTH];   // stores the nmea response from the module
 
-Poll gnss_poll = Poll(2000);                // used for non blocking action timing
+const int QUERIES_PER_MINUTE = 12;
+const int MINUTE = 60000; // milliseconds
+
+Poll gnss_poll = Poll( MINUTE / QUERIES_PER_MINUTE );   // used for non blocking action timing
 GnssData gnss_data = GnssData();
-GNSS gnss = GNSS();                         // the interface with the Wio GNSS module
-  
+GNSS gnss = GNSS();                                     // the interface with the Wio GNSS module
+
 void setup() {
     start_gnss(&gnss);
     delay(2000);
@@ -40,9 +43,12 @@ void start_gnss(GNSS * module) {
 void get_gnss_data() {
     clear_buffer(nmea_sentence, NMEA_SENTENCE_LENGTH);
     if (gnss.NMEA_read_and_save("RMC", nmea_sentence)) {
+        SerialUSB.print("Raw sentence: ");
+        SerialUSB.println(nmea_sentence);
         if(gnss_data.parse_nmea(nmea_sentence)) {
-            // send data over network        
+            // send data over network   
+            SerialUSB.print("Parsed sentence: ");
+            SerialUSB.println(gnss_data.get_data());
         }
     }
 }
-
