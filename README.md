@@ -23,6 +23,29 @@ interface.
 
 Picocom is a small, simple program that will do the job.
 
+# APN registration
+
+As a reminder, the way to register the APN for the Quectel EC21-A module
+is to use the following AT commands:
+
+```
+AT+CGDCONT=1,"IPV4V6","apn"
+
+AT+CGACT=1,1
+```
+
+Check the status of the registration with:
+
+```
+AT+CEREG?
+```
+
+The result should be something like (0,5).
+
+Note that setting the context with CGDCONT requires that the cid be 1 like in 
+the previous example. Setting the cid to something else and then running
+CGACT will produce and error for some reason.
+
 # License
 
 This project is licensed under 0BSD. See the accompying LICENSE for the exact
