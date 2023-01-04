@@ -8,6 +8,7 @@
 #include "poll.h"
 #include "gnss_data.h"
 #include "helpers.h"
+#include "cellular.h"
 
 #endif
 
