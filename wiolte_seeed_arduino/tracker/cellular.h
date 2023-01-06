@@ -8,7 +8,7 @@
 
 #include "wio_tracker.h"
 #include "helpers.h"
-
+#include "modem_interface.h"
 
 class Cellular {
 public:
@@ -33,7 +33,9 @@ private:
     char _device_key[8 + 1];
     char _tags[128 + 1];
     int _remote_port;
-};
 
+    void _activate_context();
+    void _configure_context();
+};
 
 #endif

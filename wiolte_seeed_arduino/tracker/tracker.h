@@ -9,6 +9,7 @@
 #include "gnss_data.h"
 #include "helpers.h"
 #include "cellular.h"
+#include "modem_interface.h"
 
 #endif
 

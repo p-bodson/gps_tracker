@@ -9,11 +9,7 @@ bool GnssData::parse_nmea(char * sentence) {
     char * save_ptr;
     char * delimiters = ",";
     
-    char * nmea_type = strtok_r(sentence, delimiters, &save_ptr); 
-    if (strncmp(nmea_type, "$GPRMC", 6) != 0) {
-        // not using RMC sentence
-        return false;
-    }
+    char * preamble_crud = strtok_r(sentence, delimiters, &save_ptr); 
     
     char * utc_time = strtok_r(NULL, delimiters, &save_ptr);  // utc time
 

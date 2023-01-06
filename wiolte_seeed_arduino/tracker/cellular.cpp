@@ -47,30 +47,30 @@ void Cellular::clear_data() {
     clear_buffer(_data, sizeof(_data));
 }
 
-bool Cellular::configure_modem() {
-
-    //TODO: Handle response from modem other than ERROR and OK
-
-    // set TCP context
+void Cellular::_configure_context() {
     char qicsgp_string[sizeof(_apn) + 100];
-    sprintf(qicsgp_string,"AT+QICSGP=1,1,\"%s\",\"\",\"\",3\r\n", _apn);
-    
-    const int retry_max = 3;
-    int retry_count = 0;
-    
-    while (retry_count < retry_max) {
-        send_cmd(qicsgp_string);
-        retry_count += 1;
-        delay(1000);   
-    }
+    sprintf(qicsgp_string,"AT+QICSGP=1,1,\"%s\",\"\",\"\",3", _apn);
 
-    // activate the context
-    retry_count = 0;
-    while (retry_count < retry_max) {
-        send_cmd("AT+QIACT=1\r\n");
-        retry_count += 1;
-        delay(1000);
-    }
+    command_modem(qicsgp_string, 0, 0);
+}
+
+void Cellular::_activate_context() {
+    command_modem("AT+QIACT=1", 0, 0);
+}
+
+bool Cellular::configure_modem() {
+    
+    // Note: if you retry a command too many times and too quickly,
+    // the modem will shut down
+
+    // set the TCP context
+    _configure_context();
+
+    delay(5000);
+
+    // then activate it
+    _activate_context();
+    delay(5000);
 
     return true;
 }
@@ -96,21 +96,19 @@ bool Cellular::send(char * data, char * tags) {
 
     char socket_close[] = "AT+QICLOSE=0,10";
 
-    //SerialUSB.print(socket_info);
-    send_cmd(socket_info);
-    delay(1000);
-    //SerialUSB.print(preamble);
-    send_cmd(preamble);
-    delay(1000);
-    //SerialUSB.print(message);
-    send_cmd(message);
+
+    command_modem(socket_info, 0, 0);
+    delay(2000);
+
+    command_modem(preamble, 0, 0);
+    delay(2000);
+    command_modem(message, 0, 0);
 
     // wait for message to send
-    delay(5000);
+    delay(10000);
 
-    //SerialUSB.print(socket_close);
-    send_cmd(socket_close);
-    delay(1000);
+    command_modem(socket_close, 0, 0);
+    delay(2000);
 
     clear_data();
     clear_tags();

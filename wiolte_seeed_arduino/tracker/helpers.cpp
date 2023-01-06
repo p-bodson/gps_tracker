@@ -5,3 +5,4 @@ void clear_buffer(char * a_buffer, int a_length){
         a_buffer[i] = 0;
     }
 }
+
